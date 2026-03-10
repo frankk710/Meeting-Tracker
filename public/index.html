@@ -106,7 +106,7 @@
                         <td class="p-4">${dept}</td>
                         <td class="p-4 font-medium text-blue-800">${ldr}</td>
                         <td class="p-4 ${statusColor}">${m.status}</td>
-                        <td class="p-4 text-gray-500 text-sm truncate max-w-xs" title="${m.notes}">${m.notes}</td>
+                        <td class="p-4 text-gray-500 text-sm min-w-[200px] max-w-md whitespace-normal break-words leading-relaxed">${m.notes}</td>
                     </tr>
                 `;
             });
@@ -145,4 +145,5 @@
         loadMeetings();
     </script>
 </body>
+
 </html>
