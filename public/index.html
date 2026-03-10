@@ -26,16 +26,15 @@
                     <option value="其他">其他</option>
                 </select>
 
-                <!-- 第三行：主办科室 和 参会范围 -->
+                <!-- 第三行 -->
                 <input type="text" id="department" placeholder="主办科室 (如: 综合办公室)" class="border p-2 rounded">
-                <!-- 【已修改】选项内容变更为参会范围 -->
                 <select id="status" class="border p-2 rounded">
                     <option value="都不参加">都不参加</option>
                     <option value="区市参加">区市参加</option>
                     <option value="区市、镇街参加">区市、镇街参加</option>
                 </select>
 
-                <!-- 第四行：参会领导 和 空白占位 -->
+                <!-- 第四行 -->
                 <input type="text" id="leader" placeholder="参会领导 (如: 张局、李总)" class="border p-2 rounded">
                 <div class="hidden md:block"></div>
 
@@ -48,17 +47,20 @@
         <!-- 会议列表展示 -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse whitespace-nowrap">
+                <!-- 移除了全局的 text-left -->
+                <table class="w-full border-collapse whitespace-nowrap">
                     <thead>
                         <tr class="bg-gray-100 border-b">
-                            <th class="p-4">会议名称</th>
-                            <th class="p-4">时间</th>
-                            <th class="p-4">地点</th>
-                            <th class="p-4">类型</th>
-                            <th class="p-4">主办科室</th>
-                            <th class="p-4">参会领导</th>
-                            <th class="p-4">参会范围</th> <!-- 【已修改】表头名称 -->
-                            <th class="p-4">保障备注</th>
+                            <!-- 前面的短文本表头全部居中 (text-center) -->
+                            <th class="p-4 text-center">会议名称</th>
+                            <th class="p-4 text-center">时间</th>
+                            <th class="p-4 text-center">地点</th>
+                            <th class="p-4 text-center">类型</th>
+                            <th class="p-4 text-center">主办科室</th>
+                            <th class="p-4 text-center">参会领导</th>
+                            <th class="p-4 text-center">参会范围</th>
+                            <!-- 唯独长文本表头保持左对齐 -->
+                            <th class="p-4 text-left">保障备注</th>
                         </tr>
                     </thead>
                     <tbody id="meetingList">
@@ -78,35 +80,34 @@
             tbody.innerHTML = '';
             
             meetings.forEach(m => {
-                // 【已修改】针对新的三个选项设置不同的颜色
-                let statusColor = 'text-gray-500'; // 默认：都不参加 (灰色)
+                let statusColor = 'text-gray-500';
                 if (m.status === '区市、镇街参加') {
-                    statusColor = 'text-red-600 font-bold'; // 最重要：红色加粗
+                    statusColor = 'text-red-600 font-bold';
                 } else if (m.status === '区市参加') {
-                    statusColor = 'text-blue-600 font-bold'; // 次重要：蓝色加粗
+                    statusColor = 'text-blue-600 font-bold';
                 }
                 
-                // 会议类型标签颜色
                 let typeStyle = m.meeting_type === '视频会' 
                     ? 'bg-purple-100 text-purple-700 border border-purple-200' 
                     : 'bg-gray-100 text-gray-700 border border-gray-200';
                 
-                // 处理空值
                 let dept = m.department ? m.department : '-';
                 let ldr = m.leader ? m.leader : '-';
                 
+                // 给前 7 列都加上了 text-center(水平居中) 和 align-middle(垂直居中)
+                // 最后一列保留 text-left
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4 font-medium">${m.title}</td>
-                        <td class="p-4">${m.meeting_time.replace('T', ' ')}</td>
-                        <td class="p-4">${m.location}</td>
-                        <td class="p-4">
+                        <td class="p-4 font-medium text-center align-middle">${m.title}</td>
+                        <td class="p-4 text-center align-middle">${m.meeting_time.replace('T', ' ')}</td>
+                        <td class="p-4 text-center align-middle">${m.location}</td>
+                        <td class="p-4 text-center align-middle">
                             <span class="px-2 py-1 rounded text-xs font-bold ${typeStyle}">${m.meeting_type}</span>
                         </td>
-                        <td class="p-4">${dept}</td>
-                        <td class="p-4 font-medium text-blue-800">${ldr}</td>
-                        <td class="p-4 ${statusColor}">${m.status}</td>
-                        <td class="p-4 text-gray-500 text-sm min-w-[200px] max-w-md whitespace-normal break-words leading-relaxed">${m.notes}</td>
+                        <td class="p-4 text-center align-middle">${dept}</td>
+                        <td class="p-4 font-medium text-blue-800 text-center align-middle">${ldr}</td>
+                        <td class="p-4 text-center align-middle ${statusColor}">${m.status}</td>
+                        <td class="p-4 text-gray-500 text-sm min-w-[200px] max-w-md whitespace-normal break-words leading-relaxed text-left align-middle">${m.notes}</td>
                     </tr>
                 `;
             });
@@ -122,7 +123,7 @@
                 meeting_type: document.getElementById('meeting_type').value,
                 department: document.getElementById('department').value,
                 leader: document.getElementById('leader').value,
-                status: document.getElementById('status').value, // 这里现在获取的是参会范围的文字
+                status: document.getElementById('status').value,
                 notes: document.getElementById('notes').value
             };
 
@@ -134,7 +135,6 @@
 
             e.target.reset(); // 清空表单
             
-            // 【已修改】将下拉菜单恢复到新的默认值
             document.getElementById('meeting_type').value = '本地会';
             document.getElementById('status').value = '都不参加';
 
@@ -145,5 +145,4 @@
         loadMeetings();
     </script>
 </body>
-
 </html>
