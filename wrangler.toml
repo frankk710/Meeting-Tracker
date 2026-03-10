@@ -5,4 +5,5 @@ compatibility_date = "2024-05-01"
 [[d1_databases]]
 binding = "DB" # 代码中调用数据库的名称
 database_name = "meeting-db" # 数据库名称
-database_id = "" # 这里留空，一会儿填
+
+database_id = "5f334790-a934-4fad-88cb-867993f6f176" # 这里留空，一会儿填
