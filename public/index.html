@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-6">
+    <!-- 【关键修改1】这里将 max-w-7xl 改成了 w-[95%]，让它铺满屏幕的95% -->
     <div class="w-[95%] mx-auto">
         <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">📊 每周会议保障排期表</h1>
 
@@ -14,8 +15,10 @@
         <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-blue-500" id="formContainer">
             <h2 class="text-xl font-semibold mb-4" id="formTitle">➕ 新增会议任务</h2>
             <form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- 隐藏的 ID 字段 -->
                 <input type="hidden" id="edit_id" value="">
 
+                <!-- 调整了表单占比，让长短输入框比例更协调 -->
                 <input type="text" id="title" placeholder="会议名称 (如: 业务周会)" required class="border p-2 rounded md:col-span-2">
                 <input type="datetime-local" id="meeting_time" required class="border p-2 rounded">
                 <input type="text" id="location" placeholder="会议地点 (如: 1号会议室)" required class="border p-2 rounded">
@@ -31,10 +34,11 @@
                     <option value="区市参加">区市参加</option>
                     <option value="区市、镇街参加">区市、镇街参加</option>
                 </select>
-                <input type="text" id="leader" placeholder="参会领导 (多个用顿号分隔，如: 张局、李总)" class="border p-2 rounded">
+                <input type="text" id="leader" placeholder="参会领导 (如: 张局、李总)" class="border p-2 rounded">
 
                 <input type="text" id="notes" placeholder="保障要求 (如: 需准备投影仪、茶水、席位牌)" class="border p-2 rounded md:col-span-4">
                 
+                <!-- 按钮区域 -->
                 <div class="md:col-span-4 flex gap-4 mt-2">
                     <button type="submit" id="submitBtn" class="flex-1 bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors font-bold text-lg">保存会议排期</button>
                     <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-300 text-gray-700 p-3 rounded hover:bg-gray-400 transition-colors px-10 font-bold text-lg">取消修改</button>
@@ -45,22 +49,23 @@
         <!-- 会议列表展示 -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="overflow-x-auto">
+                <!-- 【关键修改2】去掉了全局的 whitespace-nowrap，允许长内容自然换行 -->
                 <table class="w-full border-collapse">
                     <thead>
-                        <tr class="bg-gray-100">
-                            <!-- 所有表头都增加边框，实现隔离 -->
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">会议名称</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">时间</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">地点</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">类型</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">主办科室</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">参会领导</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">参会范围</th>
-                            <th class="p-4 text-left whitespace-nowrap border border-gray-200">保障备注</th>
-                            <th class="p-4 text-center whitespace-nowrap border border-gray-200">操作</th>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-4 text-center whitespace-nowrap">会议名称</th>
+                            <th class="p-4 text-center whitespace-nowrap">时间</th>
+                            <th class="p-4 text-center whitespace-nowrap">地点</th>
+                            <th class="p-4 text-center whitespace-nowrap">类型</th>
+                            <th class="p-4 text-center whitespace-nowrap">主办科室</th>
+                            <th class="p-4 text-center whitespace-nowrap">参会领导</th>
+                            <th class="p-4 text-center whitespace-nowrap">参会范围</th>
+                            <th class="p-4 text-left whitespace-nowrap">保障备注</th>
+                            <th class="p-4 text-center whitespace-nowrap">操作</th>
                         </tr>
                     </thead>
                     <tbody id="meetingList">
+                        <!-- 数据将通过 JS 动态加载 -->
                     </tbody>
                 </table>
             </div>
@@ -70,24 +75,13 @@
     <script>
         let meetingDataList = [];
 
-        // 【新增】辅助函数：自动把分隔的领导姓名转换为标签
-        function renderLeaderTags(leaderStr) {
-            if (!leaderStr || leaderStr === '-') return '-';
-            // 自动兼容 顿号、逗号、分号、空格 多种分隔符
-            const leaders = leaderStr.split(/[、,，;；\s]+/).filter(name => name.trim() !== '');
-            return leaders.map(name => {
-                return `<span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm inline-block m-0.5">${name}</span>`
-            }).join('');
-        }
-
         async function loadMeetings() {
             const res = await fetch('/api/meetings');
             meetingDataList = await res.json();
             const tbody = document.getElementById('meetingList');
             tbody.innerHTML = '';
             
-            meetings.forEach(m => {
-            meetings.forEach(m => {
+            meetingDataList.forEach(m => {
                 let statusColor = 'text-gray-500';
                 if (m.status === '区市、镇街参加') {
                     statusColor = 'text-red-600 font-bold';
@@ -100,25 +94,25 @@
                     : 'bg-gray-100 text-gray-700 border border-gray-200';
                 
                 let dept = m.department ? m.department : '-';
-
+                let ldr = m.leader ? m.leader : '-';
+                
+                // 【关键修改3】对每一列做了精准的换行控制
+                // min-w-[150px] 保证会议名称和领导太长时会自动往下排，不会挤压其他列
+                // whitespace-nowrap 保证时间和操作按钮永远不换行
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <!-- 所有数据单元格都增加边框，实现隔离 -->
-                        <td class="p-4 font-medium text-center align-middle min-w-[150px] border border-gray-200">${m.title}</td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap text-gray-700 border border-gray-200">${m.meeting_time.replace('T', ' ')}</td>
-                        <td class="p-4 text-center align-middle min-w-[100px] border border-gray-200">${m.location}</td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap border border-gray-200">
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-medium text-center align-middle min-w-[150px]">${m.title}</td>
+                        <td class="p-4 text-center align-middle whitespace-nowrap text-gray-700">${m.meeting_time.replace('T', ' ')}</td>
+                        <td class="p-4 text-center align-middle min-w-[100px]">${m.location}</td>
+                        <td class="p-4 text-center align-middle whitespace-nowrap">
                             <span class="px-2 py-1 rounded text-xs font-bold ${typeStyle}">${m.meeting_type}</span>
                         </td>
-                        <td class="p-4 text-center align-middle border border-gray-200">${dept}</td>
-                        <!-- 这里不再输出纯文字，调用函数生成标签 -->
-                        <td class="p-2 text-center align-middle min-w-[120px] border border-gray-200">
-                            ${renderLeaderTags(m.leader)}
-                        </td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap ${statusColor} border border-gray-200">${m.status}</td>
-                        <td class="p-4 text-gray-500 text-sm min-w-[250px] break-words leading-relaxed text-left align-middle border border-gray-200">${m.notes}</td>
+                        <td class="p-4 text-center align-middle">${dept}</td>
+                        <td class="p-4 font-medium text-blue-800 text-center align-middle min-w-[120px]">${ldr}</td>
+                        <td class="p-4 text-center align-middle whitespace-nowrap ${statusColor}">${m.status}</td>
+                        <td class="p-4 text-gray-500 text-sm min-w-[250px] break-words leading-relaxed text-left align-middle">${m.notes}</td>
                         
-                        <td class="p-4 text-center align-middle whitespace-nowrap border border-gray-200">
+                        <td class="p-4 text-center align-middle whitespace-nowrap">
                             <button onclick="editMeeting(${m.id})" class="text-blue-500 hover:text-blue-800 font-bold mr-3 underline">修改</button>
                             <button onclick="deleteMeeting(${m.id})" class="text-red-400 hover:text-red-700 font-bold underline">删除</button>
                         </td>
