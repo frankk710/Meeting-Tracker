@@ -1,218 +1,298 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每周会议保障清单</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每周会议保障清单</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+th,td{
+border-right:1px solid #e5e7eb;
+vertical-align:middle;
+}
+
+th:last-child,td:last-child{
+border-right:none;
+}
+</style>
+
 </head>
+
 <body class="bg-gray-50 p-6">
-    <!-- 【关键修改1】这里将 max-w-7xl 改成了 w-[95%]，让它铺满屏幕的95% -->
-    <div class="w-[95%] mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">📊 每周会议保障排期表</h1>
 
-        <!-- 添加/修改会议表单 -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-blue-500" id="formContainer">
-            <h2 class="text-xl font-semibold mb-4" id="formTitle">➕ 新增会议任务</h2>
-            <form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- 隐藏的 ID 字段 -->
-                <input type="hidden" id="edit_id" value="">
+<div class="w-[95%] mx-auto">
 
-                <!-- 调整了表单占比，让长短输入框比例更协调 -->
-                <input type="text" id="title" placeholder="会议名称 (如: 业务周会)" required class="border p-2 rounded md:col-span-2">
-                <input type="datetime-local" id="meeting_time" required class="border p-2 rounded">
-                <input type="text" id="location" placeholder="会议地点 (如: 1号会议室)" required class="border p-2 rounded">
-                
-                <select id="meeting_type" class="border p-2 rounded">
-                    <option value="本地会">本地会</option>
-                    <option value="视频会">视频会</option>
-                    <option value="其他">其他</option>
-                </select>
-                <input type="text" id="department" placeholder="主办科室 (如: 综合办公室)" class="border p-2 rounded">
-                <select id="status" class="border p-2 rounded">
-                    <option value="都不参加">都不参加</option>
-                    <option value="区市参加">区市参加</option>
-                    <option value="区市、镇街参加">区市、镇街参加</option>
-                </select>
-                <input type="text" id="leader" placeholder="参会领导 (如: 张局、李总)" class="border p-2 rounded">
+<h1 class="text-3xl font-bold mb-8 text-center text-blue-600">
+📊 每周会议保障排期表
+</h1>
 
-                <input type="text" id="notes" placeholder="保障要求 (如: 需准备投影仪、茶水、席位牌)" class="border p-2 rounded md:col-span-4">
-                
-                <!-- 按钮区域 -->
-                <div class="md:col-span-4 flex gap-4 mt-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors font-bold text-lg">保存会议排期</button>
-                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-300 text-gray-700 p-3 rounded hover:bg-gray-400 transition-colors px-10 font-bold text-lg">取消修改</button>
-                </div>
-            </form>
-        </div>
 
-        <!-- 会议列表展示 -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-                <!-- 【关键修改2】去掉了全局的 whitespace-nowrap，允许长内容自然换行 -->
-                <table class="w-full border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 border-b">
-                            <th class="p-4 text-center whitespace-nowrap">会议名称</th>
-                            <th class="p-4 text-center whitespace-nowrap">时间</th>
-                            <th class="p-4 text-center whitespace-nowrap">地点</th>
-                            <th class="p-4 text-center whitespace-nowrap">类型</th>
-                            <th class="p-4 text-center whitespace-nowrap">主办科室</th>
-                            <th class="p-4 text-center whitespace-nowrap">参会领导</th>
-                            <th class="p-4 text-center whitespace-nowrap">参会范围</th>
-                            <th class="p-4 text-left whitespace-nowrap">保障备注</th>
-                            <th class="p-4 text-center whitespace-nowrap">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="meetingList">
-                        <!-- 数据将通过 JS 动态加载 -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="bg-white p-6 rounded-lg shadow-md mb-8 border-t-4 border-blue-500" id="formContainer">
 
-    <script>
-        let meetingDataList = [];
+<h2 class="text-xl font-semibold mb-4" id="formTitle">
+➕ 新增会议任务
+</h2>
 
-        async function loadMeetings() {
-            const res = await fetch('/api/meetings');
-            meetingDataList = await res.json();
-            const tbody = document.getElementById('meetingList');
-            tbody.innerHTML = '';
-            
-            meetingDataList.forEach(m => {
-                let statusColor = 'text-gray-500';
-                if (m.status === '区市、镇街参加') {
-                    statusColor = 'text-red-600 font-bold';
-                } else if (m.status === '区市参加') {
-                    statusColor = 'text-blue-600 font-bold';
-                }
-                
-                let typeStyle = m.meeting_type === '视频会' 
-                    ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                    : 'bg-gray-100 text-gray-700 border border-gray-200';
-                
-                let dept = m.department ? m.department : '-';
-                let ldr = m.leader ? m.leader : '-';
-                
-                // 【关键修改3】对每一列做了精准的换行控制
-                // min-w-[150px] 保证会议名称和领导太长时会自动往下排，不会挤压其他列
-                // whitespace-nowrap 保证时间和操作按钮永远不换行
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50 transition-colors">
-                        <td class="p-4 font-medium text-center align-middle min-w-[150px]">${m.title}</td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap text-gray-700">${m.meeting_time.replace('T', ' ')}</td>
-                        <td class="p-4 text-center align-middle min-w-[100px]">${m.location}</td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap">
-                            <span class="px-2 py-1 rounded text-xs font-bold ${typeStyle}">${m.meeting_type}</span>
-                        </td>
-                        <td class="p-4 text-center align-middle">${dept}</td>
-                        <td class="p-4 font-medium text-blue-800 text-center align-middle min-w-[120px]">${ldr}</td>
-                        <td class="p-4 text-center align-middle whitespace-nowrap ${statusColor}">${m.status}</td>
-                        <td class="p-4 text-gray-500 text-sm min-w-[250px] break-words leading-relaxed text-left align-middle">${m.notes}</td>
-                        
-                        <td class="p-4 text-center align-middle whitespace-nowrap">
-                            <button onclick="editMeeting(${m.id})" class="text-blue-500 hover:text-blue-800 font-bold mr-3 underline">修改</button>
-                            <button onclick="deleteMeeting(${m.id})" class="text-red-400 hover:text-red-700 font-bold underline">删除</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+<form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-        function editMeeting(id) {
-            const meeting = meetingDataList.find(m => m.id === id);
-            if(!meeting) return;
+<input type="hidden" id="edit_id">
 
-            document.getElementById('edit_id').value = meeting.id;
-            document.getElementById('title').value = meeting.title;
-            document.getElementById('meeting_time').value = meeting.meeting_time;
-            document.getElementById('location').value = meeting.location;
-            document.getElementById('meeting_type').value = meeting.meeting_type;
-            document.getElementById('department').value = meeting.department;
-            document.getElementById('leader').value = meeting.leader;
-            document.getElementById('status').value = meeting.status;
-            document.getElementById('notes').value = meeting.notes;
+<input type="text" id="title" placeholder="会议名称" required class="border p-2 rounded md:col-span-2">
 
-            document.getElementById('formTitle').innerText = '✏️ 修改会议信息';
-            document.getElementById('formContainer').classList.replace('border-blue-500', 'border-yellow-400');
-            document.getElementById('submitBtn').innerText = '保存修改内容';
-            document.getElementById('submitBtn').classList.replace('bg-blue-500', 'bg-yellow-500');
-            document.getElementById('submitBtn').classList.replace('hover:bg-blue-600', 'hover:bg-yellow-600');
-            document.getElementById('cancelBtn').classList.remove('hidden');
+<input type="datetime-local" id="meeting_time" required class="border p-2 rounded">
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+<input type="text" id="location" placeholder="会议地点" required class="border p-2 rounded">
 
-        function resetForm() {
-            document.getElementById('addMeetingForm').reset();
-            document.getElementById('edit_id').value = '';
-            
-            document.getElementById('meeting_type').value = '本地会';
-            document.getElementById('status').value = '都不参加';
+<select id="meeting_type" class="border p-2 rounded">
+<option value="本地会">本地会</option>
+<option value="视频会">视频会</option>
+<option value="其他">其他</option>
+</select>
 
-            document.getElementById('formTitle').innerText = '➕ 新增会议任务';
-            document.getElementById('formContainer').classList.replace('border-yellow-400', 'border-blue-500');
-            document.getElementById('submitBtn').innerText = '保存会议排期';
-            document.getElementById('submitBtn').classList.replace('bg-yellow-500', 'bg-blue-500');
-            document.getElementById('submitBtn').classList.replace('hover:bg-yellow-600', 'hover:bg-blue-600');
-            document.getElementById('cancelBtn').classList.add('hidden');
-        }
+<input type="text" id="department" placeholder="主办科室" class="border p-2 rounded">
 
-        async function deleteMeeting(id) {
-            const pwd = prompt("⚠️ 删除操作需要权限，请输入管理员密码：");
-            if (pwd === null) return; 
-            if (pwd.trim() === "") {
-                alert("密码不能为空！");
-                return;
-            }
+<select id="status" class="border p-2 rounded">
+<option value="都不参加">都不参加</option>
+<option value="区市参加">区市参加</option>
+<option value="区市、镇街参加">区市、镇街参加</option>
+</select>
 
-            const res = await fetch(`/api/meetings?id=${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Admin-Password': pwd
-                }
-            });
+<input type="text" id="leader" placeholder="参会领导 (张局、李局)" class="border p-2 rounded">
 
-            if (res.ok) {
-                alert("✅ 删除成功！");
-                loadMeetings();
-            } else {
-                const errorData = await res.json();
-                alert(`❌ 删除失败：${errorData.error}`);
-            }
-        }
+<input type="text" id="notes" placeholder="保障要求" class="border p-2 rounded md:col-span-4">
 
-        document.getElementById('addMeetingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const editId = document.getElementById('edit_id').value;
-            const data = {
-                id: editId ? Number(editId) : undefined,
-                title: document.getElementById('title').value,
-                meeting_time: document.getElementById('meeting_time').value,
-                location: document.getElementById('location').value,
-                meeting_type: document.getElementById('meeting_type').value,
-                department: document.getElementById('department').value,
-                leader: document.getElementById('leader').value,
-                status: document.getElementById('status').value,
-                notes: document.getElementById('notes').value
-            };
+<div class="md:col-span-4 flex gap-4 mt-2">
 
-            const method = editId ? 'PUT' : 'POST';
+<button type="submit"
+id="submitBtn"
+class="flex-1 bg-blue-500 text-white p-3 rounded hover:bg-blue-600 font-bold text-lg">
+保存会议排期
+</button>
 
-            await fetch('/api/meetings', {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+<button type="button"
+id="cancelBtn"
+onclick="resetForm()"
+class="hidden bg-gray-300 p-3 rounded hover:bg-gray-400 px-10 font-bold text-lg">
+取消修改
+</button>
 
-            resetForm(); 
-            loadMeetings();
-        });
+</div>
+</form>
+</div>
 
-        loadMeetings();
-    </script>
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+
+<div class="overflow-x-auto">
+
+<table class="w-full table-fixed border-collapse">
+
+<thead>
+
+<tr class="bg-gray-100 border-b border-gray-300">
+
+<th class="p-4 text-center">会议名称</th>
+<th class="p-4 text-center">时间</th>
+<th class="p-4 text-center">地点</th>
+<th class="p-4 text-center">类型</th>
+<th class="p-4 text-center">主办科室</th>
+<th class="p-4 text-center">参会领导</th>
+<th class="p-4 text-center">参会范围</th>
+<th class="p-4 text-left">保障备注</th>
+<th class="p-4 text-center">操作</th>
+
+</tr>
+
+</thead>
+
+<tbody id="meetingList"></tbody>
+
+</table>
+
+</div>
+</div>
+</div>
+
+
+<script>
+
+let meetingDataList=[]
+
+async function loadMeetings(){
+
+const res=await fetch('/api/meetings')
+
+meetingDataList=await res.json()
+
+const tbody=document.getElementById('meetingList')
+
+tbody.innerHTML=''
+
+
+meetingDataList.forEach(m=>{
+
+let statusColor='text-gray-500'
+
+if(m.status==='区市、镇街参加'){
+
+statusColor='text-red-600 font-bold'
+
+}else if(m.status==='区市参加'){
+
+statusColor='text-blue-600 font-bold'
+
+}
+
+
+let typeStyle=m.meeting_type==='视频会'
+?'bg-purple-100 text-purple-700 border border-purple-200'
+:'bg-gray-100 text-gray-700 border border-gray-200'
+
+
+let dept=m.department?m.department:'-'
+
+
+let leaderHtml='-'
+
+if(m.leader){
+
+leaderHtml=m.leader
+.split(/[、,，]/)
+.map(name=>
+`<span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded m-1 inline-block">${name.trim()}</span>`
+).join('')
+
+}
+
+
+tbody.innerHTML+=`
+
+<tr class="border-b hover:bg-gray-50">
+
+<td class="p-4 text-center align-middle font-medium break-words">${m.title}</td>
+
+<td class="p-4 text-center align-middle whitespace-nowrap">${m.meeting_time.replace('T',' ')}</td>
+
+<td class="p-4 text-center align-middle break-words">${m.location}</td>
+
+<td class="p-4 text-center align-middle">
+
+<span class="px-2 py-1 rounded text-xs font-bold ${typeStyle}">
+${m.meeting_type}
+</span>
+
+</td>
+
+<td class="p-4 text-center align-middle">${dept}</td>
+
+<td class="p-4 text-center align-middle">
+
+<div class="flex flex-wrap justify-center">
+${leaderHtml}
+</div>
+
+</td>
+
+<td class="p-4 text-center align-middle whitespace-nowrap ${statusColor}">
+${m.status}
+</td>
+
+<td class="p-4 text-gray-600 text-sm break-words leading-relaxed text-left align-middle">
+${m.notes}
+</td>
+
+<td class="p-4 text-center align-middle whitespace-nowrap">
+
+<button onclick="editMeeting(${m.id})"
+class="text-blue-500 hover:text-blue-800 font-bold mr-3 underline">
+修改
+</button>
+
+<button onclick="deleteMeeting(${m.id})"
+class="text-red-400 hover:text-red-700 font-bold underline">
+删除
+</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+
+function resetForm(){
+
+document.getElementById('addMeetingForm').reset()
+
+document.getElementById('edit_id').value=''
+
+document.getElementById('meeting_type').value='本地会'
+
+document.getElementById('status').value='都不参加'
+
+}
+
+
+async function deleteMeeting(id){
+
+if(!confirm("确定删除？")) return
+
+await fetch(`/api/meetings?id=${id}`,{method:'DELETE'})
+
+loadMeetings()
+
+}
+
+
+document.getElementById('addMeetingForm').addEventListener('submit',async(e)=>{
+
+e.preventDefault()
+
+const data={
+
+title:title.value,
+
+meeting_time:meeting_time.value,
+
+location:location.value,
+
+meeting_type:meeting_type.value,
+
+department:department.value,
+
+leader:leader.value,
+
+status:status.value,
+
+notes:notes.value
+
+}
+
+await fetch('/api/meetings',{
+
+method:'POST',
+
+headers:{'Content-Type':'application/json'},
+
+body:JSON.stringify(data)
+
+})
+
+resetForm()
+
+loadMeetings()
+
+})
+
+
+loadMeetings()
+
+</script>
+
 </body>
 </html>
