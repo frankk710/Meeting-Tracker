@@ -15,21 +15,21 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 3px; }
 
-        /* 表头视觉强化 */
+        /* 表头视觉强化：加大字号、极细致加粗、深色背景 */
         .table-header-enhanced {
             background-color: #f8fafc;
-            font-size: 1.125rem;
+            font-size: 1.125rem; /* 18px */
             color: #1e3a8a;
             letter-spacing: 0.05em;
         }
 
-        /* 主办科室专用：强制不换行 */
+        /* 主办科室专用：强制不换行，且不额外占据空间 */
         .dept-column {
             white-space: nowrap !important;
-            width: 1%; /* 强制收缩到内容宽度，防止多占空间 */
+            width: 1%; 
         }
 
-        /* 保障备注专用：允许换行并吸收压缩压力 */
+        /* 保障备注专用：允许换行并吸收表格压缩压力 */
         .notes-column {
             min-width: 200px;
             word-break: break-all;
@@ -70,7 +70,7 @@
         <div class="w-[95%] mx-auto">
             <div class="flex justify-between items-center mb-8">
                 <h1 class="text-3xl font-black text-blue-600">📊 每周会议保障排期表</h1>
-                <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm flex items-center gap-1 transition-colors">
+                <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm flex items-center gap-1 transition-colors font-medium">
                     <span>退出登录</span>
                 </button>
             </div>
@@ -79,34 +79,34 @@
                 <h2 class="text-xl font-bold mb-4 text-gray-700" id="formTitle">➕ 新增会议任务</h2>
                 <form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <input type="hidden" id="edit_id" value="">
-                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-400 font-medium">
                     <input type="datetime-local" id="meeting_time" required class="border p-3 rounded-xl bg-gray-50 focus:bg-white outline-none">
                     <input type="text" id="location" placeholder="会议地点" required class="border p-3 rounded-xl bg-gray-50 focus:bg-white outline-none">
-                    <select id="meeting_type" class="border p-3 rounded-xl bg-gray-50 outline-none">
+                    <select id="meeting_type" class="border p-3 rounded-xl bg-gray-50 outline-none font-medium">
                         <option value="本地会">本地会</option>
                         <option value="视频会">视频会</option>
                         <option value="其他">其他</option>
                     </select>
-                    <input type="text" id="department" placeholder="主办科室" class="border p-3 rounded-xl bg-gray-50">
-                    <select id="status" class="border p-3 rounded-xl bg-gray-50">
+                    <input type="text" id="department" placeholder="主办科室" class="border p-3 rounded-xl bg-gray-50 outline-none">
+                    <select id="status" class="border p-3 rounded-xl bg-gray-50 outline-none">
                         <option value="都不参加">都不参加</option>
                         <option value="区市参加">区市参加</option>
                         <option value="区市、镇街参加">区市、镇街参加</option>
                     </select>
-                    <input type="text" id="leader" placeholder="参会领导 (用顿号分隔)" class="border p-3 rounded-xl bg-gray-50">
-                    <input type="text" id="notes" placeholder="保障要求" class="border p-3 rounded-xl md:col-span-4 bg-gray-50">
+                    <input type="text" id="leader" placeholder="参会领导 (用顿号分隔)" class="border p-3 rounded-xl bg-gray-50 outline-none">
+                    <input type="text" id="notes" placeholder="保障要求与备注" class="border p-3 rounded-xl md:col-span-4 bg-gray-50 outline-none">
                     <div class="md:col-span-4 flex gap-4 mt-2">
-                        <button type="submit" id="submitBtn" class="flex-1 bg-blue-500 text-white p-4 rounded-xl hover:bg-blue-600 transition-all font-bold text-lg shadow-lg shadow-blue-100">保存会议排期</button>
+                        <button type="submit" id="submitBtn" class="flex-1 bg-blue-500 text-white p-4 rounded-xl hover:bg-blue-600 transition-all font-black text-lg shadow-lg">保存会议排期</button>
                         <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-200 text-gray-600 p-4 rounded-xl px-10 font-bold">取消修改</button>
                     </div>
                 </form>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="table-header-enhanced">
-                            <tr class="border-b-2 border-blue-200">
+                        <thead class="table-header-enhanced border-b-2 border-blue-200">
+                            <tr>
                                 <th class="p-5 text-center font-black">序号</th>
                                 <th class="p-5 text-center font-black">会议名称</th>
                                 <th class="p-5 text-center font-black">时间</th>
@@ -172,16 +172,16 @@
                 let typeStyle = m.meeting_type === '视频会' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-gray-100 text-gray-700 border-gray-200';
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50 transition-colors">
-                        <td class="p-4 text-center text-gray-400 font-mono">${index + 1}</td>
-                        <td class="p-4 font-bold text-gray-900 text-center">${m.title}</td>
-                        <td class="p-4 text-center whitespace-nowrap text-gray-600 font-medium">${m.meeting_time.replace('T', ' ')}</td>
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="p-4 text-center text-gray-400 font-mono text-lg">${index + 1}</td>
+                        <td class="p-4 font-bold text-gray-900 text-center text-lg">${m.title}</td>
+                        <td class="p-4 text-center whitespace-nowrap text-gray-500 font-medium">${m.meeting_time.replace('T', ' ')}</td>
                         <td class="p-4 text-center text-gray-600">${m.location}</td>
                         <td class="p-4 text-center">
                             <span class="px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap ${typeStyle}">${m.meeting_type}</span>
                         </td>
                         <td class="p-4 text-center text-gray-600 dept-column">${m.department || '-'}</td>
-                        <td class="p-4 text-center font-semibold">${createLeaderTags(m.leader)}</td>
+                        <td class="p-4 text-center">${createLeaderTags(m.leader)}</td>
                         <td class="p-4 text-center whitespace-nowrap ${statusColor}">${m.status}</td>
                         <td class="p-4 notes-column text-gray-600 text-sm leading-relaxed">${m.notes || '-'}</td>
                         <td class="p-4 text-center whitespace-nowrap">
@@ -192,10 +192,14 @@
             });
         }
 
+        /**
+         * 参会领导标签生成函数
+         * 修改点：将 text-blue-700 改为 text-black
+         */
         function createLeaderTags(str) {
             if (!str || str === '-') return '-';
             return str.split(/[、,，\s]+/).filter(n => n.trim() !== '').map(name => 
-                `<span class="inline-block bg-blue-50 text-blue-800 border border-blue-100 px-2 py-0.5 rounded-lg mr-1 mb-1 text-sm font-bold whitespace-nowrap">${name}</span>`
+                `<span class="inline-block bg-blue-50 text-black border border-blue-100 px-2 py-0.5 rounded-lg mr-1 mb-1 text-sm font-bold whitespace-nowrap">${name}</span>`
             ).join('');
         }
 
@@ -222,13 +226,13 @@
         });
 
         async function deleteMeeting(id) {
-            const pwd = prompt("请输入管理员删除密码：");
+            const pwd = prompt("请输入管理员确认密码：");
             if (!pwd) return;
             const res = await fetch(`/api/meetings?id=${id}`, {
                 method: 'DELETE',
                 headers: { 'X-Admin-Password': pwd, 'X-Web-Password': authToken }
             });
-            if (res.ok) loadMeetings(); else alert("密码错误");
+            if (res.ok) loadMeetings(); else alert("认证失败");
         }
 
         function editMeeting(id) {
