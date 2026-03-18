@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会议保障清单 - 安全认证</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* 核心布局 */
+        /* 核心布局保持不变 */
         .table-container {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
@@ -37,13 +38,7 @@
         tbody tr:last-child td { border-bottom: none; }
         th:last-child, td:last-child { border-right: none; }
 
-        /* 强制不换行列 */
-        .nowrap-column {
-            white-space: nowrap !important;
-            width: 1%; 
-        }
-
-        /* 备注列弹性压缩 */
+        .nowrap-column { white-space: nowrap !important; width: 1%; }
         .notes-column {
             min-width: 150px;
             word-break: break-all;
@@ -53,23 +48,23 @@
 
         #mainContent { display: none; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 3px; }
     </style>
 </head>
 <body class="bg-gray-50">
 
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center z-[999] overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-rose-400 to-pink-200"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-sky-200"></div>
         <div class="relative bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-2xl w-[400px] border border-white/50 text-center">
-            <div class="w-20 h-20 bg-rose-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <div class="w-20 h-20 bg-blue-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
             </div>
             <h2 class="text-2xl font-black mb-2 text-gray-800 tracking-tight">安全认证</h2>
             <div class="space-y-4">
-                <input type="password" id="webPassInput" placeholder="请输入访问密码" onkeypress="if(event.keyCode==13) checkLogin()" class="w-full bg-white/50 border border-rose-100 p-4 rounded-2xl text-center text-lg font-bold text-rose-900 outline-none">
-                <button onclick="checkLogin()" class="w-full bg-rose-500 hover:bg-rose-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95">立即进入</button>
+                <input type="password" id="webPassInput" placeholder="请输入访问密码" onkeypress="if(event.keyCode==13) checkLogin()" class="w-full bg-white/50 border border-blue-100 p-4 rounded-2xl text-center text-lg font-bold text-blue-900 outline-none">
+                <button onclick="checkLogin()" class="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95">立即进入</button>
             </div>
             <p id="loginError" class="text-red-500 mt-4 text-sm font-medium hidden">⚠️ 密码错误</p>
         </div>
@@ -79,13 +74,13 @@
         <div class="w-[98%] mx-auto">
             <div class="flex justify-between items-end mb-8">
                 <div>
-                    <h1 class="text-3xl font-black text-rose-600">📊 每周会议保障排期表</h1>
+                    <h1 class="text-3xl font-black text-blue-600">📊 每周会议保障排期表</h1>
                     <p class="text-gray-400 text-sm mt-1">系统已就绪，粉色高亮显示今日及后续会议</p>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md transition-all flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1.01.707.293l5.414 5.414a1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         导出表格
                     </button>
@@ -97,7 +92,7 @@
                 <h2 class="text-xl font-bold mb-4 text-gray-700" id="formTitle">➕ 新增会议任务</h2>
                 <form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <input type="hidden" id="edit_id" value="">
-                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 outline-none focus:ring-2 focus:ring-rose-200">
+                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-200">
                     <input type="datetime-local" id="meeting_time" required class="border p-3 rounded-xl bg-gray-50">
                     
                     <select id="location" required class="border p-3 rounded-xl bg-gray-50 outline-none">
@@ -125,7 +120,7 @@
                     <input type="text" id="leader" placeholder="参会领导" class="border p-3 rounded-xl bg-gray-50">
                     <input type="text" id="notes" placeholder="保障要求与备注" class="border p-3 rounded-xl md:col-span-4 bg-gray-50 outline-none">
                     <div class="md:col-span-4 mt-2">
-                        <button type="submit" id="submitBtn" class="w-full bg-rose-500 text-white p-4 rounded-xl font-black text-lg shadow-lg hover:bg-rose-600 transition-colors">保存会议排期</button>
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white p-4 rounded-xl font-black text-lg shadow-lg hover:bg-blue-600 transition-colors">保存会议排期</button>
                     </div>
                 </form>
             </div>
@@ -188,6 +183,7 @@
             const tbody = document.getElementById('meetingList');
             tbody.innerHTML = '';
             
+            // 获取今日日期基准（不含时分秒）
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -200,25 +196,24 @@
             };
 
             meetingDataList.forEach((m, index) => {
+                // 会议日期判定
                 const meetingDate = new Date(m.meeting_time);
                 const isFutureOrToday = meetingDate >= today;
 
-                // --- 粉色高亮核心逻辑 ---
-                // 未来或今日：背景显眼的粉色(bg-rose-100/50)，左侧加粗深粉边框(border-l-rose-500)
-                // 过去的记录：视觉淡化(opacity-50)
-                const highlightClass = isFutureOrToday 
-                    ? 'bg-rose-100/50 border-l-4 border-l-rose-500 shadow-sm' 
-                    : 'opacity-50 bg-gray-50/50';
+                // 核心修改：今日及以后使用粉色底色，过去使用淡灰色
+                const rowHighlightClass = isFutureOrToday 
+                    ? 'bg-pink-50 border-l-4 border-l-pink-400' 
+                    : 'opacity-60 bg-white';
                 
-                const titleStyle = isFutureOrToday ? 'font-bold text-rose-900' : 'text-gray-400';
-                
-                const statusColor = m.status.includes('镇街') ? 'text-red-600 font-bold' : (m.status.includes('区市') ? 'text-blue-600 font-bold' : 'text-gray-500');
+                const titleTextColor = isFutureOrToday ? 'text-pink-900 font-bold' : 'text-gray-800';
+
+                let statusColor = m.status.includes('镇街') ? 'text-red-600 font-bold' : (m.status.includes('区市') ? 'text-blue-600 font-bold' : 'text-gray-500');
                 let typeStyle = typeColorMap[m.meeting_type] || 'bg-gray-100 text-gray-700 border-gray-200';
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-rose-200/30 transition-colors ${highlightClass}">
+                    <tr class="hover:bg-pink-100/50 transition-colors ${rowHighlightClass}">
                         <td class="text-center text-gray-400 font-mono text-sm nowrap-column">${index + 1}</td>
-                        <td class="text-center text-sm nowrap-column ${titleStyle}">${m.title}</td>
+                        <td class="text-center text-sm nowrap-column ${titleTextColor}">${m.title}</td>
                         <td class="text-center whitespace-nowrap text-gray-500 text-sm">${m.meeting_time.replace('T', ' ')}</td>
                         <td class="text-center text-gray-600 text-sm nowrap-column">${m.location}</td>
                         <td class="text-center nowrap-column">
@@ -239,7 +234,7 @@
         function createLeaderTags(str) {
             if (!str || str === '-') return '-';
             return str.split(/[、,，\s]+/).filter(n => n.trim() !== '').map(name => 
-                `<span class="inline-block bg-white text-black border border-gray-200 px-2 py-0.5 rounded-lg mr-1 mb-1 text-sm whitespace-nowrap shadow-sm">${name}</span>`
+                `<span class="inline-block bg-blue-50 text-black border border-blue-100 px-2 py-0.5 rounded-lg mr-1 mb-1 text-sm whitespace-nowrap">${name}</span>`
             ).join('');
         }
 
@@ -247,10 +242,8 @@
             const table = document.getElementById('meetingTableMain');
             const noExportItems = document.querySelectorAll('.no-export');
             noExportItems.forEach(el => el.style.display = 'none');
-
             const dateStr = new Date().toISOString().slice(0, 10);
             const wb = XLSX.utils.table_to_book(table, { sheet: "每周会议保障" });
-            
             noExportItems.forEach(el => el.style.display = '');
             XLSX.writeFile(wb, `会议保障排期表_${dateStr}.xlsx`);
         }
