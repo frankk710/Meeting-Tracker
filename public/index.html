@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每周会议保障清单 - 安全认证</title>
+    <title>📆会议保障清单 - 安全认证</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -79,7 +79,7 @@
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h1 class="text-3xl font-black text-blue-600">📊 每周会议保障排期表</h1>
-                    <p class="text-gray-400 text-sm mt-1">系统已就绪，支持分色显示与 Excel 导出</p>
+                    <p class="text-gray-400 text-sm mt-1">系统已就绪，已高亮显示今日及后续会议</p>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md transition-all flex items-center gap-2">
@@ -187,7 +187,10 @@
             const tbody = document.getElementById('meetingList');
             tbody.innerHTML = '';
             
-            // 颜色映射表
+            // 获取今日凌晨时间用于对比
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             const typeColorMap = {
                 '本地会': 'bg-blue-100 text-blue-700 border-blue-200',
                 '视频会': 'bg-purple-100 text-purple-700 border-purple-200',
@@ -197,13 +200,20 @@
             };
 
             meetingDataList.forEach((m, index) => {
-                let statusColor = m.status.includes('镇街') ? 'text-red-600 font-bold' : (m.status.includes('区市') ? 'text-blue-600 font-bold' : 'text-gray-500');
+                // 日期比对逻辑
+                const meetingDate = new Date(m.meeting_time);
+                const isFutureOrToday = meetingDate >= today;
+
+                // 样式计算
+                const highlightClass = isFutureOrToday ? 'bg-blue-50/60 border-l-4 border-l-blue-500' : '';
+                const titleWeight = isFutureOrToday ? 'font-bold text-gray-900' : 'text-gray-700';
+                const statusColor = m.status.includes('镇街') ? 'text-red-600 font-bold' : (m.status.includes('区市') ? 'text-blue-600 font-bold' : 'text-gray-500');
                 let typeStyle = typeColorMap[m.meeting_type] || 'bg-gray-100 text-gray-700 border-gray-200';
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50/30 transition-colors">
+                    <tr class="hover:bg-blue-100/40 transition-colors ${highlightClass}">
                         <td class="text-center text-gray-400 font-mono text-sm nowrap-column">${index + 1}</td>
-                        <td class="text-gray-800 text-center text-sm nowrap-column">${m.title}</td>
+                        <td class="text-center text-sm nowrap-column ${titleWeight}">${m.title}</td>
                         <td class="text-center whitespace-nowrap text-gray-500 text-sm">${m.meeting_time.replace('T', ' ')}</td>
                         <td class="text-center text-gray-600 text-sm nowrap-column">${m.location}</td>
                         <td class="text-center nowrap-column">
@@ -228,7 +238,6 @@
             ).join('');
         }
 
-        // Excel 导出
         function exportToExcel() {
             const table = document.getElementById('meetingTableMain');
             const noExportItems = document.querySelectorAll('.no-export');
@@ -241,7 +250,6 @@
             XLSX.writeFile(wb, `会议保障排期表_${dateStr}.xlsx`);
         }
 
-        // 表单提交
         document.getElementById('addMeetingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const editId = document.getElementById('edit_id').value;
