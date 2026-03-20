@@ -30,11 +30,12 @@ export async function onRequestPost(context) {
     if (authError) return authError;
 
     const data = await context.request.json();
-    const { title, meeting_time, location, meeting_type, department, leader, status, notes } = data;
+    // 已加入 meeting_end_time
+    const { title, meeting_time, meeting_end_time, location, meeting_type, department, leader, status, notes } = data;
     
     await context.env.DB.prepare(
-        "INSERT INTO meetings (title, meeting_time, location, meeting_type, department, leader, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(title, meeting_time, location, meeting_type, department, leader, status, notes).run();
+        "INSERT INTO meetings (title, meeting_time, meeting_end_time, location, meeting_type, department, leader, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(title, meeting_time, meeting_end_time, location, meeting_type, department, leader, status, notes).run();
     
     return Response.json({ success: true });
 }
@@ -45,24 +46,23 @@ export async function onRequestPut(context) {
     if (authError) return authError;
 
     const data = await context.request.json();
-    const { id, title, meeting_time, location, meeting_type, department, leader, status, notes } = data;
+    // 已加入 meeting_end_time
+    const { id, title, meeting_time, meeting_end_time, location, meeting_type, department, leader, status, notes } = data;
     
     if (!id) return Response.json({ error: "缺少ID" }, { status: 400 });
 
     await context.env.DB.prepare(
-        "UPDATE meetings SET title=?, meeting_time=?, location=?, meeting_type=?, department=?, leader=?, status=?, notes=? WHERE id=?"
-    ).bind(title, meeting_time, location, meeting_type, department, leader, status, notes, id).run();
+        "UPDATE meetings SET title=?, meeting_time=?, meeting_end_time=?, location=?, meeting_type=?, department=?, leader=?, status=?, notes=? WHERE id=?"
+    ).bind(title, meeting_time, meeting_end_time, location, meeting_type, department, leader, status, notes, id).run();
     
     return Response.json({ success: true });
 }
 
-// 4. 删除会议记录 (DELETE) - 【双重保护：访问密码 + 管理员删除密码】
+// 4. 删除会议记录 (DELETE)
 export async function onRequestDelete(context) {
-    // 首先检查网页访问权限
     const authError = await checkAuth(context.request, context.env);
     if (authError) return authError;
 
-    // 其次检查管理员删除密码
     const clientAdminPassword = context.request.headers.get("X-Admin-Password");
     const serverAdminPassword = context.env.ADMIN_PASSWORD || "123456";
 
