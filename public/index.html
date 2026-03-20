@@ -3,27 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>会议保障排期表</title>
+    <title>会议保障排期表 - 完整测试版</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .table-container { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); background: white; }
-        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-        thead th { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #f3f4f6; color: #374151; font-weight: 700; padding: 16px 12px !important; font-size: 0.9rem; vertical-align: middle; }
-        tbody td { border-bottom: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; padding: 12px !important; vertical-align: middle; color: #4b5563; font-size: 0.875rem; }
-        .col-idx { width: 50px; }
-        .col-title { width: 15%; }
-        .col-time { width: 170px; }
-        .col-loc { width: 100px; }
-        .col-type { width: 85px; }
-        .col-dept { width: 100px; }
-        .col-leader { width: 15%; }
-        .col-scope { width: 110px; }
-        .col-notes { width: auto; }
-        .col-ops { width: 110px; }
-        .cell-content { word-break: break-all; overflow: hidden; }
+        table { border-collapse: collapse; width: 100%; table-layout: auto; }
+        thead th { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #f3f4f6; color: #374151; font-weight: 700; padding: 16px 12px !important; font-size: 0.95rem; vertical-align: middle; }
+        tbody td { border-bottom: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; padding: 14px 12px !important; vertical-align: middle; color: #4b5563; }
+        .nowrap-column { white-space: nowrap !important; width: 1%; }
+        .notes-column { min-width: 150px; word-break: break-all; white-space: normal !important; text-align: left !important; }
         #mainContent { display: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 3px; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -41,10 +35,13 @@
     <div id="mainContent" class="p-6">
         <div class="w-[98%] mx-auto">
             <div class="flex justify-between items-end mb-8">
-                <div><h1 class="text-3xl font-black text-blue-600">🗓️ 会议保障排期表</h1></div>
+                <div>
+                    <h1 class="text-3xl font-black text-blue-600">🗓️ 会议保障排期表</h1>
+                    <p class="text-gray-400 text-sm mt-1">系统已就绪，结束时间最晚的会议将自动排在首位</p>
+                </div>
                 <div class="flex items-center gap-5">
-                    <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md">导出表格</button>
-                    <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm font-medium">退出登录</button>
+                    <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md flex items-center gap-2 transition-all">导出表格</button>
+                    <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors text-sm font-medium cursor-pointer">退出登录</button>
                 </div>
             </div>
 
@@ -52,13 +49,15 @@
                 <h2 class="text-xl font-bold mb-4 text-gray-700" id="formTitle">➕ 新增会议任务</h2>
                 <form id="addMeetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <input type="hidden" id="edit_id" value="">
-                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 outline-none">
+                    
+                    <input type="text" id="title" placeholder="会议名称" required class="border p-3 rounded-xl md:col-span-2 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-200">
                     <div class="flex items-center gap-2 md:col-span-2">
                         <input type="datetime-local" id="meeting_time" required class="border p-3 rounded-xl bg-gray-50 w-full">
-                        <span class="text-gray-400 text-xs">至</span>
-                        <input type="datetime-local" id="meeting_end_time" class="border p-3 rounded-xl bg-gray-50 w-full">
+                        <span class="text-gray-400">至</span>
+                        <input type="datetime-local" id="meeting_end_time" class="border p-3 rounded-xl bg-gray-50 w-full" title="选填">
                     </div>
-                    <select id="location" required class="border p-3 rounded-xl bg-gray-50">
+
+                    <select id="location" required class="border p-3 rounded-xl bg-gray-50 outline-none">
                         <option value="" disabled selected>选择会议地点</option>
                         <option value="会商室">会商室</option>
                         <option value="值班室">值班室</option>
@@ -78,10 +77,12 @@
                         <option value="区市参加">区市参加</option>
                         <option value="区市、镇街参加">区市、镇街参加</option>
                     </select>
+
                     <input type="text" id="leader" placeholder="参会领导" class="border p-3 rounded-xl bg-gray-50 md:col-span-2">
                     <input type="text" id="notes" placeholder="保障要求与备注" class="border p-3 rounded-xl bg-gray-50 md:col-span-2">
+
                     <div class="md:col-span-4 mt-2">
-                        <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white p-4 rounded-xl font-black text-lg hover:bg-blue-600 shadow-lg">保存会议排期</button>
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white p-4 rounded-xl font-black text-lg shadow-lg hover:bg-blue-600">保存会议排期</button>
                     </div>
                 </form>
             </div>
@@ -91,16 +92,16 @@
                     <table id="meetingTableMain">
                         <thead>
                             <tr>
-                                <th class="text-center col-idx">序号</th>
-                                <th class="text-center col-title">会议名称</th>
-                                <th class="text-center col-time">起止时间</th>
-                                <th class="text-center col-loc">地点</th>
-                                <th class="text-center col-type">类型</th>
-                                <th class="text-center col-dept">主办科室</th>
-                                <th class="text-center col-leader">参会领导</th>
-                                <th class="text-center col-scope">参会范围</th>
-                                <th class="text-left col-notes">保障备注</th>
-                                <th class="text-center col-ops no-export">操作</th>
+                                <th class="text-center nowrap-column">序号</th>
+                                <th class="text-center nowrap-column">会议名称</th>
+                                <th class="text-center nowrap-column">起止时间</th>
+                                <th class="text-center nowrap-column">地点</th>
+                                <th class="text-center nowrap-column">类型</th>
+                                <th class="text-center nowrap-column">主办科室</th>
+                                <th class="text-center">参会领导</th>
+                                <th class="text-center nowrap-column">参会范围</th>
+                                <th class="text-left notes-column">保障备注</th>
+                                <th class="text-center no-export">操作</th>
                             </tr>
                         </thead>
                         <tbody id="meetingList"></tbody>
@@ -129,66 +130,107 @@
             loadMeetings();
         }
 
-        function logout() { sessionStorage.removeItem('meeting_access_token'); location.reload(); }
+        function logout() {
+            sessionStorage.removeItem('meeting_access_token');
+            location.reload();
+        }
 
         async function loadMeetings() {
-            const res = await fetch('/api/meetings', { headers: { 'X-Web-Password': authToken } });
-            if (res.ok) { meetingDataList = await res.json(); renderTable(); }
+            try {
+                const res = await fetch('/api/meetings', { headers: { 'X-Web-Password': authToken } });
+                if (!res.ok) return;
+                meetingDataList = await res.json();
+                renderTable();
+            } catch (e) { console.error(e); }
         }
 
         function renderTable() {
             const tbody = document.getElementById('meetingList');
             tbody.innerHTML = '';
-            const today = new Date().setHours(0,0,0,0);
-            meetingDataList.sort((a, b) => new Date(b.meeting_end_time || b.meeting_time) - new Date(a.meeting_end_time || a.meeting_time));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const typeColorMap = {
+                '本地会': 'bg-blue-50 text-blue-700 border-blue-200',
+                '视频会': 'bg-purple-50 text-purple-700 border-purple-200',
+                '调度会': 'bg-orange-50 text-orange-700 border-orange-200',
+                '参观接待': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                '突发事件': 'bg-red-50 text-red-700 border-red-200'
+            };
+
+            meetingDataList.sort((a, b) => {
+                const endA = a.meeting_end_time ? new Date(a.meeting_end_time) : new Date(a.meeting_time);
+                const endB = b.meeting_end_time ? new Date(b.meeting_end_time) : new Date(b.meeting_time);
+                
+                const isAActive = endA >= today;
+                const isBActive = endB >= today;
+
+                if (isAActive && !isBActive) return -1;
+                if (!isAActive && isBActive) return 1;
+                
+                return endB - endA;
+            });
+
             meetingDataList.forEach((m, index) => {
-                const isFuture = new Date(m.meeting_end_time || m.meeting_time) >= today;
-                const rowClass = isFuture ? 'bg-pink-50 border-l-4 border-l-pink-400' : 'opacity-60 bg-white';
+                const startTime = new Date(m.meeting_time);
+                const endTime = m.meeting_end_time ? new Date(m.meeting_end_time) : startTime;
+                const isFutureOrToday = endTime >= today;
+                
+                const textColorClass = isFutureOrToday ? 'text-gray-800' : 'text-gray-400';
+                const rowHighlightClass = isFutureOrToday ? 'bg-pink-50 border-l-4 border-l-pink-400' : 'opacity-60 bg-white';
+                
+                let timeDisplay = `<div class="text-blue-600 font-normal">起: ${m.meeting_time.replace('T', ' ')}</div>`;
+                if (m.meeting_end_time && m.meeting_end_time.trim() !== "") {
+                    timeDisplay += `<div class="text-red-500 font-normal">止: ${m.meeting_end_time.replace('T', ' ')}</div>`;
+                }
+
+                let statusColor = m.status.includes('镇街') ? 'text-red-600' : (m.status.includes('区市') ? 'text-blue-600' : 'text-gray-500');
+                const typeStyle = typeColorMap[m.meeting_type] || 'bg-gray-50 text-gray-700 border-gray-200';
+                
                 tbody.innerHTML += `
-                    <tr class="${rowClass} hover:bg-pink-100/30">
-                        <td class="text-center">${index + 1}</td>
-                        <td class="text-center font-bold cell-content">${m.title}</td>
-                        <td class="text-left px-2">
-                            <div class="text-blue-600 text-[11px]">起: ${m.meeting_time.replace('T',' ')}</div>
-                            <div class="text-red-500 text-[11px]">${m.meeting_end_time ? '止: '+m.meeting_end_time.replace('T',' ') : ''}</div>
+                    <tr class="hover:bg-pink-100/50 transition-colors ${rowHighlightClass}">
+                        <td class="text-center text-sm nowrap-column font-normal ${textColorClass}">${index + 1}</td>
+                        <td class="text-center text-sm nowrap-column ${isFutureOrToday ? 'font-bold text-gray-800' : 'font-normal text-gray-400'}">${m.title}</td>
+                        <td class="text-left whitespace-nowrap text-sm px-4 font-normal">${timeDisplay}</td>
+                        <td class="text-center text-sm nowrap-column font-normal ${textColorClass}">${m.location}</td>
+                        <td class="text-center nowrap-column">
+                            <span class="px-3 py-1 rounded-full text-xs font-normal border ${typeStyle}">${m.meeting_type}</span>
                         </td>
-                        <td class="text-center cell-content">${m.location}</td>
-                        <td class="text-center"><span class="px-2 py-0.5 rounded-full text-[10px] border border-blue-200 bg-blue-50">${m.meeting_type}</span></td>
-                        <td class="text-center cell-content">${m.department || '-'}</td>
-                        <td class="text-center cell-content">${m.leader || '-'}</td>
-                        <td class="text-center text-xs font-bold">${m.status}</td>
-                        <td class="text-left col-notes cell-content">${m.notes || '-'}</td>
-                        <td class="text-center no-export">
-                            <button onclick="editMeeting(${m.id})" class="text-blue-500 underline text-xs mr-2">修改</button>
-                            <button onclick="deleteMeeting(${m.id})" class="text-red-400 underline text-xs">删除</button>
+                        <td class="text-center text-sm nowrap-column font-normal ${textColorClass}">${m.department || '-'}</td>
+                        <td class="text-center font-normal">${createLeaderTags(m.leader)}</td>
+                        <td class="text-center nowrap-column text-sm font-normal ${statusColor}">${m.status}</td>
+                        <td class="notes-column text-sm leading-relaxed font-normal ${textColorClass}">${m.notes || '-'}</td>
+                        <td class="text-center whitespace-nowrap no-export">
+                            <button onclick="editMeeting(${m.id})" class="text-blue-500 hover:text-blue-700 font-normal mr-3 underline text-sm">修改</button>
+                            <button onclick="deleteMeeting(${m.id})" class="text-red-400 hover:text-red-600 font-normal underline text-sm">删除</button>
                         </td>
                     </tr>`;
             });
         }
 
-        // --- 核心修复：冲突检测算法 ---
-        function checkConflict(newData) {
-            const newS = new Date(newData.meeting_time).getTime();
-            // 如果没填结束时间，默认会议持续1小时进行冲突预判
-            const newE = newData.meeting_end_time ? new Date(newData.meeting_end_time).getTime() : (newS + 3600000);
+        function createLeaderTags(str) {
+            if (!str || str === '-') return '-';
+            return str.split(/[、,，\s]+/).filter(n => n.trim() !== '').map(name => 
+                `<span class="inline-block bg-blue-50 text-black border border-blue-100 px-2 py-0.5 rounded-lg mr-1 mb-1 text-sm whitespace-nowrap font-normal">${name}</span>`
+            ).join('');
+        }
 
-            if (newData.meeting_end_time && newE <= newS) {
-                alert("❌ 结束时间必须晚于开始时间");
+        function checkConflict(newData) {
+            const newStart = new Date(newData.meeting_time).getTime();
+            const newEnd = newData.meeting_end_time ? new Date(newData.meeting_end_time).getTime() : newStart + 60000;
+
+            if (newData.meeting_end_time && newEnd <= newStart) {
+                alert("❌ 错误：结束时间必须晚于开始时间");
                 return true;
             }
 
             for (const exist of meetingDataList) {
-                // 1. 排除自身（编辑模式下）
-                if (newData.id && String(exist.id) === String(newData.id)) continue;
-
-                // 2. 只有同一地点才检查冲突
+                if (newData.id && exist.id === newData.id) continue;
                 if (exist.location === newData.location) {
-                    const existS = new Date(exist.meeting_time).getTime();
-                    const existE = exist.meeting_end_time ? new Date(exist.meeting_end_time).getTime() : (existS + 3600000);
-
-                    // 3. 数学逻辑：两个区间 [A, B] 和 [C, D] 重叠的条件是 (A < D) 且 (B > C)
-                    if (newS < existE && newE > existS) {
-                        alert(`⚠️ 会议室占用冲突！\n地点：${newData.location}\n冲突会议：「${exist.title}」\n占用时段：${exist.meeting_time.replace('T',' ')} 至 ${exist.meeting_end_time ? exist.meeting_end_time.replace('T',' ') : '未定'}`);
+                    const existStart = new Date(exist.meeting_time).getTime();
+                    const existEnd = exist.meeting_end_time ? new Date(exist.meeting_end_time).getTime() : existStart + 60000;
+                    if (newStart < existEnd && newEnd > existStart) {
+                        alert(`⚠️ 会议冲突！${newData.location}会议室  在该时段已有如下会议占用：\n「${exist.title}」`);
                         return true;
                     }
                 }
@@ -214,12 +256,12 @@
 
             if (checkConflict(data)) return;
 
-            const res = await fetch('/api/meetings', {
+            await fetch('/api/meetings', {
                 method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Web-Password': authToken },
                 body: JSON.stringify(data)
             });
-            if(res.ok) { resetForm(); loadMeetings(); } else { alert("保存失败，请检查授权"); }
+            resetForm(); loadMeetings();
         });
 
         function editMeeting(id) {
@@ -238,19 +280,50 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        async function deleteMeeting(id) {
-            if (!confirm("确定删除？")) return;
-            const pass = prompt("输入管理员删除密码：");
-            if (!pass) return;
-            const res = await fetch(`/api/meetings?id=${id}`, {
-                method: 'DELETE',
-                headers: { 'X-Web-Password': authToken, 'X-Admin-Password': pass }
-            });
-            if (res.ok) { alert("已删除"); loadMeetings(); } else { alert("密码错误"); }
+        function resetForm() {
+            document.getElementById('addMeetingForm').reset();
+            document.getElementById('edit_id').value = '';
+            document.getElementById('formTitle').innerText = '➕ 新增会议任务';
         }
 
-        function resetForm() { document.getElementById('addMeetingForm').reset(); document.getElementById('edit_id').value = ''; document.getElementById('formTitle').innerText = '➕ 新增会议任务'; }
-        function exportToExcel() { const wb = XLSX.utils.table_to_book(document.getElementById('meetingTableMain')); XLSX.writeFile(wb, `会议排期表.xlsx`); }
+        // --- 核心修改：带密码验证的删除功能 ---
+        async function deleteMeeting(id) {
+            if (!confirm("确认删除？该操作不可恢复。")) return;
+
+            const adminPass = prompt("请输入管理员删除密码：");
+            if (adminPass === null) return; // 取消
+            if (adminPass.trim() === "") {
+                alert("密码不能为空！");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/meetings?id=${id}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'X-Web-Password': authToken,
+                        'X-Admin-Password': adminPass 
+                    }
+                });
+
+                if (res.ok) {
+                    alert("✅ 删除成功");
+                    loadMeetings();
+                } else {
+                    const result = await res.json();
+                    alert("❌ 删除失败：" + (result.error || "授权失败"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("请求出错，请重试");
+            }
+        }
+
+        function exportToExcel() {
+            const table = document.getElementById('meetingTableMain');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "排期表" });
+            XLSX.writeFile(wb, `会议保障排期表.xlsx`);
+        }
     </script>
 </body>
 </html>
