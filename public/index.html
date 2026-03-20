@@ -9,12 +9,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .table-container { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); background: white; }
-        
-        /* --- 固定布局 CSS --- */
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
         thead th { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #f3f4f6; color: #374151; font-weight: 700; padding: 16px 12px !important; font-size: 0.9rem; vertical-align: middle; }
         tbody td { border-bottom: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6; padding: 12px !important; vertical-align: middle; color: #4b5563; font-size: 0.875rem; }
-
         .col-idx { width: 50px; }
         .col-title { width: 15%; }
         .col-time { width: 170px; }
@@ -23,9 +20,8 @@
         .col-dept { width: 100px; }
         .col-leader { width: 15%; }
         .col-scope { width: 110px; }
-        .col-notes { width: auto; } /* 备注自动伸缩 */
+        .col-notes { width: auto; }
         .col-ops { width: 110px; }
-
         .cell-content { word-break: break-all; overflow: hidden; }
         #mainContent { display: none; }
     </style>
@@ -45,9 +41,7 @@
     <div id="mainContent" class="p-6">
         <div class="w-[98%] mx-auto">
             <div class="flex justify-between items-end mb-8">
-                <div>
-                    <h1 class="text-3xl font-black text-blue-600">🗓️ 会议保障排期表</h1>
-                </div>
+                <div><h1 class="text-3xl font-black text-blue-600">🗓️ 会议保障排期表</h1></div>
                 <div class="flex items-center gap-5">
                     <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md">导出表格</button>
                     <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm font-medium">退出登录</button>
@@ -146,17 +140,10 @@
             const tbody = document.getElementById('meetingList');
             tbody.innerHTML = '';
             const today = new Date().setHours(0,0,0,0);
-
-            meetingDataList.sort((a, b) => {
-                const endA = new Date(a.meeting_end_time || a.meeting_time).getTime();
-                const endB = new Date(b.meeting_end_time || b.meeting_time).getTime();
-                return endB - endA;
-            });
-
+            meetingDataList.sort((a, b) => new Date(b.meeting_end_time || b.meeting_time) - new Date(a.meeting_end_time || a.meeting_time));
             meetingDataList.forEach((m, index) => {
                 const isFuture = new Date(m.meeting_end_time || m.meeting_time) >= today;
                 const rowClass = isFuture ? 'bg-pink-50 border-l-4 border-l-pink-400' : 'opacity-60 bg-white';
-                
                 tbody.innerHTML += `
                     <tr class="${rowClass} hover:bg-pink-100/30">
                         <td class="text-center">${index + 1}</td>
@@ -179,30 +166,29 @@
             });
         }
 
-        /* --- 修复后的冲突检测逻辑 --- */
+        // --- 核心修复：冲突检测算法 ---
         function checkConflict(newData) {
-            const newStart = new Date(newData.meeting_time).getTime();
-            // 修复：严谨处理空字符串，防止 NaN 破坏比较逻辑
-            const hasEnd = newData.meeting_end_time && newData.meeting_end_time.trim() !== "";
-            const newEnd = hasEnd ? new Date(newData.meeting_end_time).getTime() : newStart + 1000;
+            const newS = new Date(newData.meeting_time).getTime();
+            // 如果没填结束时间，默认会议持续1小时进行冲突预判
+            const newE = newData.meeting_end_time ? new Date(newData.meeting_end_time).getTime() : (newS + 3600000);
 
-            if (hasEnd && newEnd <= newStart) {
-                alert("❌ 错误：结束时间不能早于开始时间");
+            if (newData.meeting_end_time && newE <= newS) {
+                alert("❌ 结束时间必须晚于开始时间");
                 return true;
             }
 
             for (const exist of meetingDataList) {
-                // 排除正在编辑的记录本身
-                if (newData.id && Number(exist.id) === Number(newData.id)) continue;
+                // 1. 排除自身（编辑模式下）
+                if (newData.id && String(exist.id) === String(newData.id)) continue;
 
+                // 2. 只有同一地点才检查冲突
                 if (exist.location === newData.location) {
-                    const existStart = new Date(exist.meeting_time).getTime();
-                    const existHasEnd = exist.meeting_end_time && exist.meeting_end_time.trim() !== "";
-                    const existEnd = existHasEnd ? new Date(exist.meeting_end_time).getTime() : existStart + 1000;
+                    const existS = new Date(exist.meeting_time).getTime();
+                    const existE = exist.meeting_end_time ? new Date(exist.meeting_end_time).getTime() : (existS + 3600000);
 
-                    // 重叠判断核心算法：(StartA < EndB) 且 (EndA > StartB)
-                    if (newStart < existEnd && newEnd > existStart) {
-                        alert(`⚠️ 冲突！${newData.location} 此时段已有会议：\n「${exist.title}」`);
+                    // 3. 数学逻辑：两个区间 [A, B] 和 [C, D] 重叠的条件是 (A < D) 且 (B > C)
+                    if (newS < existE && newE > existS) {
+                        alert(`⚠️ 会议室占用冲突！\n地点：${newData.location}\n冲突会议：「${exist.title}」\n占用时段：${exist.meeting_time.replace('T',' ')} 至 ${exist.meeting_end_time ? exist.meeting_end_time.replace('T',' ') : '未定'}`);
                         return true;
                     }
                 }
@@ -228,12 +214,12 @@
 
             if (checkConflict(data)) return;
 
-            await fetch('/api/meetings', {
+            const res = await fetch('/api/meetings', {
                 method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Web-Password': authToken },
                 body: JSON.stringify(data)
             });
-            resetForm(); loadMeetings();
+            if(res.ok) { resetForm(); loadMeetings(); } else { alert("保存失败，请检查授权"); }
         });
 
         function editMeeting(id) {
